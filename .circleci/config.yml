@@ -1,0 +1,58 @@
+version: 2
+
+aliases:
+  - &workspace_root
+    /home/circleci/workspace
+
+  - &attach_workspace
+    attach_workspace:
+      at: *workspace_root
+
+  - &container_config
+    working_directory: *workspace_root
+    docker:
+      - image: jensbodal/latex-to-pdf:0.1.1
+
+  - &repo_cache_key
+    v0.1-repo-{{ .Branch }}-{{ .Revision }}
+
+  - &restore_repo
+    restore_cache:
+      keys:
+        - v0.1-repo-{{ .Branch }}-{{ .Revision }}
+        - v0.1-repo-{{ .Branch }}
+        - v0.1-repo
+
+jobs:
+  checkout_repo:
+    <<: *container_config
+    steps:
+      - *restore_repo
+      - checkout
+      - save_cache:
+          key: *repo_cache_key
+          paths:
+            - .
+
+  latex_to_pdf:
+    <<: *container_config
+    steps:
+      - *attach_workspace
+      - *restore_repo
+      - run:
+          name: "Convert latex to pdf"
+          command: |
+            pdflatex example.tex
+      - store_artifacts:
+         path: ./example.pdf
+         destination: example.pdf
+
+workflows:
+  version: 2
+
+  build:
+    jobs:
+      - checkout_repo
+      - latex_to_pdf:
+          requires:
+            - checkout_repo

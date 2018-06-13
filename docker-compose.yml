@@ -1,0 +1,7 @@
+version: "3.6"
+
+services:
+  pdf-to-latex:
+    image: jensbodal/latex-to-pdf:0.1.0
+    volumes:
+      - ./example.tex:/example.tex
